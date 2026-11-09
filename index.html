@@ -402,6 +402,10 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 .times span.last{transform:translateY(-100%)}
 .slot.slot-past,.slot.slot-past:hover{background:var(--busy);border-color:var(--busy-line);color:var(--busy-text);cursor:default;opacity:.75;transform:none}
 .grid{padding-bottom:2px}
+
+/* room for the request bar / card so it never covers slots */
+body[data-reserve="bottom"] .layout{padding-bottom:calc(var(--peek-h, 76px) + 6px)}
+@media (min-width: 761px){ body[data-reserve="side"] .layout{padding-right:calc(min(380px, 100vw - 32px) + 20px)} }
 </style>
 
 </head>
@@ -716,6 +720,9 @@ function boot() {
     var sheetState = sent ? 'open' : has ? (state.sheetOpen ? 'open' : 'peek') : 'closed';
     var panelEl = document.getElementById('panel'), prevState = panelEl.dataset.state;
     panelEl.dataset.state = sheetState;
+    var reserve = window.matchMedia('(max-width: 760px)').matches ? (sheetState === 'peek' ? 'bottom' : '') : (sheetState === 'open' ? 'side' : sheetState === 'peek' ? 'bottom' : '');
+    if (reserve === 'bottom') document.documentElement.style.setProperty('--peek-h', (panelEl.offsetHeight || 76) + 'px');
+    if ((document.body.dataset.reserve || '') !== reserve) { document.body.dataset.reserve = reserve; requestAnimationFrame(function () { FIT = 0; render(); }); }
     document.getElementById('sheet-bar').setAttribute('aria-expanded', String(sheetState === 'open'));
     document.getElementById('backdrop').classList.toggle('on', sheetState === 'open' && window.matchMedia('(max-width: 760px)').matches);
     var cnt = state.sel.size + (state.sel.size > 1 ? ' slots · ' : ' slot · ') + total();
