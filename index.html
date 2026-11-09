@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#eff1f5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1e1e2e" media="(prefers-color-scheme: dark)">
 <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0}</style>
 <title>Artur's Schedule</title>
 <style>
@@ -442,6 +443,91 @@ body[data-reserve="bottom"] .layout{padding-bottom:calc(var(--peek-h, 76px) + 6p
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{transition:opacity .3s ease,transform .38s cubic-bezier(.22,.9,.3,1)}
 @media (prefers-reduced-motion: reduce){.panel,.btn-send,.toast{transition:none}.panel .sheet-body,.panel .sheet-bar,.btn-send::after,.btn-send .spin{animation:none}}
+
+/* ================= Catppuccin (VS Code): Latte / Mocha ================= */
+:root{
+  --bg:#eff1f5; --surface:#eff1f5; --surface-2:#e6e9ef; --surface-3:#dce0e8;
+  --text:#4c4f69; --muted:#6c6f85; --faint:#8c8fa1; --line:#dce0e8; --line-strong:#ccd0da;
+  --accent:#8839ef; --accent-hover:#7528e0; --on-accent:#eff1f5; --accent-soft:#e1d7f4;
+  --brand:#8839ef; --brand-grad:linear-gradient(135deg,#8839ef 0%,#7287fd 100%); --brand-glow:rgba(136,57,239,.28);
+  --free:#d6e6d9; --free-line:#b2d5ae; --free-text:#40a02b; --free-hover:#c9dfc9;
+  --busy:#ebd1db; --busy-line:#e5a2b3; --busy-text:#d20f39;
+  --buf:#f1ddd4; --buf-line:#f4c0a3; --buf-text:#fe640b;
+  --pend:#e1d7f4; --pend-line:#cbb1f3; --pend-text:#8839ef;
+  --past:#e6e9ef; --past-text:#9ca0b0;
+  --sel:#8839ef; --sel-text:#eff1f5; --ok:#179299; --err:#d20f39; --err-bg:#ebd1db; --input-line:#bcc0cc;
+  --shadow-sm:0 1px 2px rgba(76,79,105,.08); --shadow-md:0 6px 16px rgba(76,79,105,.12); --shadow-lg:0 8px 28px rgba(76,79,105,.22);
+
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Inter",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:"JetBrains Mono","Cascadia Code","Fira Code",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1e1e2e; --surface:#1e1e2e; --surface-2:#181825; --surface-3:#313244;
+  --text:#cdd6f4; --muted:#a6adc8; --faint:#7f849c; --line:#313244; --line-strong:#45475a;
+  --accent:#cba6f7; --accent-hover:#d6b9fa; --on-accent:#1e1e2e; --accent-soft:#36314a;
+  --brand:#cba6f7; --brand-grad:linear-gradient(135deg,#cba6f7 0%,#b4befe 100%); --brand-glow:rgba(203,166,247,.25);
+  --free:#313a3e; --free-line:#4e6356; --free-text:#a6e3a1; --free-hover:#3c4947;
+  --busy:#3c2d3f; --busy-line:#694459; --busy-text:#f38ba8;
+  --buf:#3d333a; --buf-line:#6b524d; --buf-text:#fab387;
+  --pend:#36314a; --pend-line:#5b4e74; --pend-text:#cba6f7;
+  --past:#181825; --past-text:#6c7086;
+  --sel:#cba6f7; --sel-text:#1e1e2e; --ok:#94e2d5; --err:#f38ba8; --err-bg:#3c2d3f; --input-line:#45475a;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 6px 16px rgba(0,0,0,.45); --shadow-lg:0 8px 28px rgba(0,0,0,.6);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#1e1e2e; --surface:#1e1e2e; --surface-2:#181825; --surface-3:#313244;
+  --text:#cdd6f4; --muted:#a6adc8; --faint:#7f849c; --line:#313244; --line-strong:#45475a;
+  --accent:#cba6f7; --accent-hover:#d6b9fa; --on-accent:#1e1e2e; --accent-soft:#36314a;
+  --brand:#cba6f7; --brand-grad:linear-gradient(135deg,#cba6f7 0%,#b4befe 100%); --brand-glow:rgba(203,166,247,.25);
+  --free:#313a3e; --free-line:#4e6356; --free-text:#a6e3a1; --free-hover:#3c4947;
+  --busy:#3c2d3f; --busy-line:#694459; --busy-text:#f38ba8;
+  --buf:#3d333a; --buf-line:#6b524d; --buf-text:#fab387;
+  --pend:#36314a; --pend-line:#5b4e74; --pend-text:#cba6f7;
+  --past:#181825; --past-text:#6c7086;
+  --sel:#cba6f7; --sel-text:#1e1e2e; --ok:#94e2d5; --err:#f38ba8; --err-bg:#3c2d3f; --input-line:#45475a;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 6px 16px rgba(0,0,0,.45); --shadow-lg:0 8px 28px rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+html,body{background:var(--bg)}
+/* editor-like time typography */
+.slot,.times span,.nav h2,.dayhead strong,.strip button strong,.chip span,.total-pill,.bar-text small,.sync{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.slot{font-weight:600}
+.nav h2{font-weight:700}
+.dayhead small,.strip button small{color:var(--faint)}
+.dayhead.today strong{background:var(--accent);color:var(--on-accent)}
+.slot[aria-pressed="true"]{background:var(--sel);border-color:var(--sel);color:var(--sel-text);box-shadow:0 0 0 2px var(--brand-glow)}
+.strip button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.strip button[aria-pressed="true"] small{color:var(--on-accent)}
+.seg{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.seg button[aria-pressed="true"]{background:var(--surface-3);color:var(--text);box-shadow:none}
+.btn-icon{background:var(--surface-2);border-color:var(--line-strong);color:var(--text)}
+.btn-icon:hover:not(:disabled){background:var(--surface-3);border-color:var(--accent)}
+.sync i{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb, var(--ok) 20%, transparent)}
+.nav{border-bottom-color:var(--line)}
+.col{border-left-color:var(--line)}
+/* request bar + form */
+.panel{background:var(--surface-2);border-color:var(--line-strong)}
+.bar-cta{background:var(--brand-grad);color:var(--on-accent)!important}
+.btn-send,.btn-send[aria-disabled="true"]{background:var(--brand-grad);color:var(--on-accent)!important}
+.btn-send:not([aria-disabled="true"]){box-shadow:0 6px 18px var(--brand-glow)}
+.chip{background:var(--surface);border-color:var(--line-strong)}
+.total-pill{background:var(--surface-3);color:var(--text)}
+.field{color:var(--text)}
+.field .req{color:var(--err)}
+.input{background:var(--surface);border-color:var(--input-line);color:var(--text)}
+.input::placeholder{color:var(--faint)}
+.input:hover{border-color:var(--overlay, var(--faint))}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.input[aria-invalid="true"]{border-color:var(--err);box-shadow:0 0 0 1px var(--err);background:var(--err-bg)}
+.note{background:var(--err-bg);color:var(--err);border-color:color-mix(in srgb, var(--err) 35%, transparent)}
+#clear{color:var(--accent)}
+.toast{background:var(--surface-3);color:var(--text);box-shadow:var(--shadow-lg)}
+.toast::before{background:var(--ok);color:var(--surface)}
+.backdrop{background:rgba(17,17,27,.55)}
+.sheet-min{background:var(--surface);color:var(--text)}
+.chip-x{color:var(--muted)}
+.chip-x:hover{background:var(--surface-3);color:var(--text)}
 </style>
 
 </head>
