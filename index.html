@@ -406,6 +406,18 @@ h1,h2,h3{font-weight:600;letter-spacing:-.01em}
 /* room for the request bar / card so it never covers slots */
 body[data-reserve="bottom"] .layout{padding-bottom:calc(var(--peek-h, 76px) + 6px)}
 @media (min-width: 761px){ body[data-reserve="side"] .layout{padding-right:calc(min(380px, 100vw - 32px) + 20px)} }
+
+/* request bar: full width along the bottom on every screen */
+@media (min-width: 761px){
+  .panel{left:0;right:0;bottom:0;width:auto;max-height:85vh;border-radius:24px 24px 0 0;border:0;border-top:1px solid var(--line-strong);box-shadow:0 -6px 28px rgba(0,0,0,.14);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .panel[data-state="peek"]{border-radius:0;box-shadow:0 -2px 12px rgba(0,0,0,.06)}
+  .sheet-bar{max-width:1440px;margin:0 auto;padding:14px 24px}
+  .sheet-body{max-width:560px;margin:0 auto;width:100%;padding:24px 24px 28px}
+  .panel[data-state="open"]::before{content:"";display:block;width:36px;height:5px;border-radius:999px;background:var(--line-strong);margin:10px auto 0}
+  .panel[data-state="closed"]{transform:translateY(100%)}
+}
+.bar-cta,.btn-send:not([aria-disabled="true"]){color:#fff}
+.grid{padding-bottom:4px}
 </style>
 
 </head>
@@ -529,7 +541,7 @@ function boot() {
   // Size the half-hour rows so the whole day (7 am to 10 pm) fits the screen height.
   function slotSize(narrow) {
     var sc = document.querySelector('.layout .scroller'); if (!sc || !sc.clientHeight) return 24;
-    var head = state.view === 'day' ? 0 : (narrow ? 34 : 26);
+    var hd = document.querySelector('#grid .dayhead'); var head = state.view === 'day' ? 0 : (hd && hd.offsetHeight ? hd.offsetHeight : 36);
     return Math.max(12, Math.min(40, Math.floor((sc.clientHeight - head - 4) / N)));
   }
   var FIT = 0, fitting = false;
@@ -720,11 +732,11 @@ function boot() {
     var sheetState = sent ? 'open' : has ? (state.sheetOpen ? 'open' : 'peek') : 'closed';
     var panelEl = document.getElementById('panel'), prevState = panelEl.dataset.state;
     panelEl.dataset.state = sheetState;
-    var reserve = window.matchMedia('(max-width: 760px)').matches ? (sheetState === 'peek' ? 'bottom' : '') : (sheetState === 'open' ? 'side' : sheetState === 'peek' ? 'bottom' : '');
+    var reserve = sheetState === 'peek' ? 'bottom' : '';
     if (reserve === 'bottom') document.documentElement.style.setProperty('--peek-h', (panelEl.offsetHeight || 76) + 'px');
     if ((document.body.dataset.reserve || '') !== reserve) { document.body.dataset.reserve = reserve; requestAnimationFrame(function () { FIT = 0; render(); }); }
     document.getElementById('sheet-bar').setAttribute('aria-expanded', String(sheetState === 'open'));
-    document.getElementById('backdrop').classList.toggle('on', sheetState === 'open' && window.matchMedia('(max-width: 760px)').matches);
+    document.getElementById('backdrop').classList.toggle('on', sheetState === 'open');
     var cnt = state.sel.size + (state.sel.size > 1 ? ' slots · ' : ' slot · ') + total();
     document.getElementById('bar-count').textContent = cnt;
     var gs = groups(); document.getElementById('bar-sub').textContent = gs.length ? gs.map(function (g) { return g.day + ' ' + g.times; }).join(' · ') : '';
