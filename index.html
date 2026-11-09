@@ -9,7 +9,7 @@
 <title>Artur's Schedule</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&amp;display=swap">
+<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&amp;display=swap">
 <style>
 /* Layout: the calendar fills the screen; one toolbar row on top; requests float in a sheet over it. */
 :root{
@@ -655,6 +655,17 @@ function boot() {
     items.forEach(function (t) { var li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
     document.getElementById('waiting').hidden = false;
   })();
+  window.__applyData = function (json) {
+    var nd = JSON.parse(json); DATA = nd;
+    [WORK, PENDING, BOOKED].forEach(function (m) { Object.keys(m).forEach(function (k) { delete m[k]; }); });
+    (nd.events || []).forEach(function (e) { (WORK[e.day] = WORK[e.day] || []).push([e.start, e.end]); });
+    Object.keys(nd.pending || {}).forEach(function (d) { (PENDING[d] = PENDING[d] || []).push.apply(PENDING[d], nd.pending[d]); });
+    var first = DAYS[0], cur = DAYS[state.week * 7 + state.dayIdx];
+    DAYS.length = 0; for (var i = 0; i < nd.days; i++) DAYS.push(addDays(nd.from, i));
+    WEEKS = Math.ceil(DAYS.length / 7);
+    if (first !== DAYS[0]) { var g = DAYS.indexOf(cur); if (g < 0) g = Math.max(0, DAYS.indexOf(nyNow().date)); state.week = Math.floor(g / 7); state.dayIdx = g % 7; }
+    render(); renderSync();
+  };
   setInterval(function () { renderSync(); render(); }, 60000);
 }
 </script>
@@ -675,20 +686,21 @@ window.LIVE_URL = 'https://script.google.com/macros/s/AKfycbx73DBnVNPdlmlrn8GZE0
     }), 6000);
   }
   function load() { return (window.LIVE_URL.indexOf('http') === 0 ? live() : Promise.reject()).catch(sheet); }
-  var started = false;
-  function start(json) { if (started) return; started = true; if (json) { dataEl.textContent = json; current = json; } boot(); }
-  load().then(start, function () { start(null); });
-  // Keep in step with Artur's calendar while the page is open; never interrupt someone mid-request.
-  window.refreshSchedule = function (force) {
+  // Show the calendar right away from the last data this browser saw (or the built-in snapshot), then go live.
+  var cached = null;
+  try { cached = localStorage.getItem('artur-data'); if (cached) check(JSON.parse(cached)); } catch (e) { cached = null; }
+  if (cached && JSON.parse(cached).syncedAt > JSON.parse(current).syncedAt) { dataEl.textContent = cached; current = cached; }
+  boot();
+  var strip = function (x) { try { var o = JSON.parse(x); delete o.syncedAt; return JSON.stringify(o); } catch (e) { return x; } };
+  window.refreshSchedule = function () {
     return load().then(function (json) {
-      if (json === current) return;
-      var strip = function (x) { try { var o = JSON.parse(x); delete o.syncedAt; return JSON.stringify(o); } catch (e) { return x; } };
+      try { localStorage.setItem('artur-data', json); } catch (e) {}
       var changed = strip(json) !== strip(current);
       dataEl.textContent = json; current = json;
-      var p = document.getElementById('panel');
-      if (changed && p && (p.dataset.state === 'closed' || force)) { try { sessionStorage.setItem('artur-reload', '1'); } catch (e) {} location.reload(); }
+      if (window.__applyData) window.__applyData(json);
     }, function () {});
   };
+  window.refreshSchedule();
   setInterval(function () { if (!document.hidden) window.refreshSchedule(false); }, 30000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) window.refreshSchedule(false); });
 })();
