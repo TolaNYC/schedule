@@ -592,8 +592,11 @@ function boot() {
       var btn = this; if (btn.dataset.busy) return; btn.dataset.busy = '1'; btn.textContent = 'Sending…';
       var body = new URLSearchParams();
       [[FORM.name, nameVal()], [FORM.note, noteVal()], [FORM.times, timesText() + '\n(' + total() + ')']].forEach(function (p) { body.append(p[0], p[1]); });
-      fetch(FORM.url.replace(/viewform.*$/, 'formResponse'), { method: 'POST', mode: 'no-cors', body: body })
-        .then(function () { finish('Request sent to Artur. Your times show here as pending within the hour.'); },
+      var viaForm = function () { return fetch(FORM.url.replace(/viewform.*$/, 'formResponse'), { method: 'POST', mode: 'no-cors', body: body }).then(function () { return 'form'; }); };
+      var viaLive = window.LIVE_URL ? fetch(window.LIVE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ a: 'request', name: nameVal(), note: noteVal(), times: timesText() + '\n(' + total() + ')' }) })
+        .then(function (r) { return r.json(); }).then(function (j) { if (!j.ok) throw new Error(j.error || 'failed'); return 'live'; }) : Promise.reject();
+      viaLive.catch(viaForm)
+        .then(function (how) { finish(how === 'live' ? 'Request sent. Artur gets it right away, and your times now show as pending.' : 'Request sent to Artur. Your times show here as pending shortly.'); if (window.refreshSchedule) window.refreshSchedule(false); },
               function () { showNote('Could not send. Check your connection and try again.'); })
         .then(function () { delete btn.dataset.busy; btn.textContent = 'Send request'; });
       return;
@@ -631,7 +634,7 @@ function boot() {
   function renderSync() {
     var mins = Math.max(0, Math.round((Date.now() - Date.parse(DATA.syncedAt)) / 60000));
     var ago = mins < 1 ? 'just now' : mins < 60 ? mins + ' min ago' : mins < 1440 ? Math.round(mins / 60) + ' h ago' : Math.round(mins / 1440) + ' days ago';
-    document.getElementById('sync-text').textContent = 'Updated ' + ago;
+    document.getElementById('sync-text').textContent = DATA.live ? 'Live' : 'Updated ' + ago; if (DATA.live) mins = 0;
     document.getElementById('sync').classList.toggle('stale', mins > 180);
   }
 
@@ -657,31 +660,37 @@ function boot() {
 </script>
 
 <script>
+window.LIVE_URL = 'https://script.google.com/macros/s/AKfycbx73DBnVNPdlmlrn8GZE0gb83JE2sEUqLS7_UwLXA32T8L13jJYR7rvoWKbJEOkzMVL/exec';
 (function () {
   var SHEET = 'https://docs.google.com/spreadsheets/d/1xdO7Xkus_-CqpMIQH2j_R4cS_xMt_9uN9pJ-bllusgU/gviz/tq?tqx=out:json&range=A1';
   var dataEl = document.getElementById('sched-data'), current = dataEl.textContent.trim();
-  function load() {
-    var ctl = window.AbortController ? new AbortController() : null;
-    var t = setTimeout(function () { if (ctl) ctl.abort(); }, 6000);
-    return fetch(SHEET + '&t=' + Date.now(), { cache: 'no-store', signal: ctl ? ctl.signal : undefined }).then(function (r) { return r.text(); }).then(function (txt) {
-      clearTimeout(t);
-      var j = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
-      var tb = j.table || {}, v = (tb.rows && tb.rows[0] && tb.rows[0].c && tb.rows[0].c[0] && tb.rows[0].c[0].v) || (tb.cols && tb.cols[0] && tb.cols[0].label);
-      var d = JSON.parse(v); if (!d || !d.from || !d.events) throw new Error('bad data');
-      return JSON.stringify(d);
-    });
+  function timed(p, ms) { return Promise.race([p, new Promise(function (_, no) { setTimeout(function () { no(new Error('timeout')); }, ms); })]); }
+  function check(d) { if (!d || !d.from || !d.events) throw new Error('bad data'); return JSON.stringify(d); }
+  function live() { return timed(fetch(window.LIVE_URL + '?a=data&t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(check), 8000); }
+  function sheet() {
+    return timed(fetch(SHEET + '&t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (txt) {
+      var j = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1)), tb = j.table || {};
+      var v = (tb.rows && tb.rows[0] && tb.rows[0].c && tb.rows[0].c[0] && tb.rows[0].c[0].v) || (tb.cols && tb.cols[0] && tb.cols[0].label);
+      return check(JSON.parse(v));
+    }), 6000);
   }
+  function load() { return (window.LIVE_URL.indexOf('http') === 0 ? live() : Promise.reject()).catch(sheet); }
   var started = false;
   function start(json) { if (started) return; started = true; if (json) { dataEl.textContent = json; current = json; } boot(); }
   load().then(start, function () { start(null); });
-  // Pick up new availability while the page stays open, but never while someone is mid-request.
-  setInterval(function () {
-    load().then(function (json) {
+  // Keep in step with Artur's calendar while the page is open; never interrupt someone mid-request.
+  window.refreshSchedule = function (force) {
+    return load().then(function (json) {
       if (json === current) return;
+      var strip = function (x) { try { var o = JSON.parse(x); delete o.syncedAt; return JSON.stringify(o); } catch (e) { return x; } };
+      var changed = strip(json) !== strip(current);
+      dataEl.textContent = json; current = json;
       var p = document.getElementById('panel');
-      if (p && p.dataset.state === 'closed') location.reload(); else { dataEl.textContent = json; current = json; }
+      if (changed && p && (p.dataset.state === 'closed' || force)) { try { sessionStorage.setItem('artur-reload', '1'); } catch (e) {} location.reload(); }
     }, function () {});
-  }, 5 * 60000);
+  };
+  setInterval(function () { if (!document.hidden) window.refreshSchedule(false); }, 30000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) window.refreshSchedule(false); });
 })();
 </script>
 </body>
