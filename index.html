@@ -262,6 +262,21 @@ button{font-family:inherit}
 .wrap{height:100vh;height:100dvh;min-height:0}
 #adminview{overflow:auto}
 .layout .scroller{overflow-y:auto;overflow-x:hidden}
+
+/* ---------- request sheet: phone fixes ---------- */
+.btn-send[aria-disabled="true"]{opacity:.45;cursor:not-allowed;box-shadow:none}
+.field .req{color:var(--busy-text);font-weight:700;margin-left:2px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translate(-50%,0);z-index:60;background:var(--text);color:var(--surface);font-weight:600;font-size:14px;padding:12px 18px;border-radius:999px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:8px;max-width:calc(100vw - 32px);white-space:nowrap;transition:opacity .25s ease,transform .25s ease}
+.toast[hidden]{display:flex!important;opacity:0;transform:translate(-50%,16px);pointer-events:none}
+.toast::before{content:"✓";display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12px}
+.panel{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+@media (max-width: 760px){
+  .input{font-size:16px;resize:none}
+  .panel{bottom:var(--kb, 0px);max-height:calc(var(--vvh, 100dvh) * .9);transition:transform .3s ease,opacity .3s ease,bottom .15s ease}
+  .panel[data-state="peek"]{bottom:calc(8px + env(safe-area-inset-bottom, 0px))}
+  body.sheet-open{overflow:hidden;touch-action:none}
+  body.sheet-open .panel{touch-action:pan-y}
+}
 </style>
 
 </head>
@@ -316,8 +331,9 @@ button{font-family:inherit}
         <div class="empty" id="empty" hidden></div>
         <form id="reqform" hidden novalidate>
           <ul class="chips" id="chips" aria-label="Selected times"></ul>
-          <label class="field" for="f-name">Your name<input id="f-name" class="input" autocomplete="name" maxlength="80" placeholder="First and last name"></label>
-          <label class="field" for="f-note">What's it for?<textarea id="f-note" class="input" rows="2" maxlength="300" placeholder="Coffee, a call, a shift swap…"></textarea></label>
+          <label class="field" for="f-name"><span>Your name<span class="req" aria-hidden="true">*</span></span><input id="f-name" class="input" required enterkeyhint="next" autocomplete="name" maxlength="80" placeholder="First and last name"></label>
+          <label class="field" for="f-note"><span>What's it for?<span class="req" aria-hidden="true">*</span></span><textarea id="f-note" class="input" required enterkeyhint="done" rows="2" maxlength="300" placeholder="Coffee, a call, a shift swap…"></textarea></label>
+          <div class="note" id="note" hidden></div>
           <a class="btn btn-primary btn-send" id="send" href="#" role="button">Send request</a>
           <button type="button" class="btn btn-ghost" id="clear">Clear selection</button>
           <p class="fine">Artur approves every request. Approved times turn busy here.</p>
@@ -329,7 +345,6 @@ button{font-family:inherit}
           <p id="sent-text"></p>
           <button type="button" class="btn" id="again">Done</button>
         </div>
-        <div class="note" id="note" hidden></div>
         <textarea class="copybox" id="copybox" readonly hidden aria-label="Request text to copy"></textarea>
       </div>
     </aside>
@@ -337,6 +352,7 @@ button{font-family:inherit}
   </div>
 </div>
 
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <div class="dock" id="dock" hidden=""><span id="dock-text"></span><button type="button" class="btn btn-primary" id="dock-go">Review request</button></div>
 
 <script>
@@ -567,7 +583,7 @@ function boot() {
     });
     var send = document.getElementById('send');
     send.href = sendHref();
-    send.textContent = FORM ? 'Send request' : 'Copy my request';
+    if (!send.dataset.busy) send.textContent = FORM ? 'Send request' : 'Copy my request'; syncSend(); document.body.classList.toggle('sheet-open', sheetState === 'open' && window.matchMedia('(max-width: 760px)').matches);
     if (sent) {
       var sl = document.getElementById('sent-list'); sl.innerHTML = '';
       state.sent.lines.forEach(function (l) { var li = document.createElement('li'); li.textContent = l.day + ' · ' + l.times; sl.appendChild(li); });
@@ -577,16 +593,36 @@ function boot() {
 
   function showNote(msg) { var n = document.getElementById('note'); n.textContent = msg; n.hidden = false; }
   function hideNote() { document.getElementById('note').hidden = true; document.getElementById('copybox').hidden = true; }
-  function finish(msg) { state.sent = { lines: lines(), msg: msg }; state.sel.clear(); persist(); hideNote(); render(); }
+  function ready() { return !!(nameVal() && noteVal()); }
+  function syncSend() { var s = document.getElementById('send'); s.setAttribute('aria-disabled', String(!ready())); }
+  var toastT = null;
+  function toast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 4000); }
+  function finish(msg) {
+    // Show the new times as pending right away; live data confirms them a moment later.
+    groups().forEach(function (g) { (PENDING[g.date] = PENDING[g.date] || []).push([hhmm_(uMin(g.a)), hhmm_(uMin(g.b))]); });
+    if (document.activeElement) document.activeElement.blur();
+    state.sent = null; state.sheetOpen = false; state.sel.clear(); persist(); hideNote();
+    document.getElementById('f-note').value = '';
+    render(); syncSend(); toast(msg);
+  }
+  var hhmm_ = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
 
   ['f-name', 'f-note'].forEach(function (id) {
-    document.getElementById(id).addEventListener('input', function () { document.getElementById('send').href = sendHref(); if (id === 'f-name') this.removeAttribute('aria-invalid'); });
+    document.getElementById(id).addEventListener('input', function () { document.getElementById('send').href = sendHref(); if (this.value.trim()) { this.removeAttribute('aria-invalid'); hideNote(); } syncSend(); });
   });
   document.getElementById('reqform').addEventListener('submit', function (e) { e.preventDefault(); });
 
   document.getElementById('send').addEventListener('click', function (e) {
     var nameEl = document.getElementById('f-name');
-    if (!nameVal()) { e.preventDefault(); nameEl.setAttribute('aria-invalid', 'true'); nameEl.focus(); showNote('Add your name so Artur knows who it is.'); return; }
+    var noteEl = document.getElementById('f-note');
+    if (!ready()) {
+      e.preventDefault();
+      if (!nameVal()) nameEl.setAttribute('aria-invalid', 'true');
+      if (!noteVal()) noteEl.setAttribute('aria-invalid', 'true');
+      (nameVal() ? noteEl : nameEl).focus();
+      showNote(!nameVal() && !noteVal() ? 'Add your name and what it\'s for.' : !nameVal() ? 'Add your name so Artur knows who it is.' : 'Add what the time is for.');
+      return;
+    }
     if (FORM) {
       e.preventDefault();
       var btn = this; if (btn.dataset.busy) return; btn.dataset.busy = '1'; btn.textContent = 'Sending…';
@@ -596,7 +632,7 @@ function boot() {
       var viaLive = window.LIVE_URL ? fetch(window.LIVE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ a: 'request', name: nameVal(), note: noteVal(), times: timesText() + '\n(' + total() + ')' }) })
         .then(function (r) { return r.json(); }).then(function (j) { if (!j.ok) throw new Error(j.error || 'failed'); return 'live'; }) : Promise.reject();
       viaLive.catch(viaForm)
-        .then(function (how) { finish(how === 'live' ? 'Request sent. Artur gets it right away, and your times now show as pending.' : 'Request sent to Artur. Your times show here as pending shortly.'); if (window.refreshSchedule) window.refreshSchedule(false); },
+        .then(function (how) { finish('Request sent to Artur'); if (window.refreshSchedule) window.refreshSchedule(false); },
               function () { showNote('Could not send. Check your connection and try again.'); })
         .then(function () { delete btn.dataset.busy; btn.textContent = 'Send request'; });
       return;
@@ -608,7 +644,7 @@ function boot() {
     try { navigator.clipboard.writeText(text).then(copied, manual); } catch (err) { manual(); }
   });
   document.getElementById('again').onclick = function () { state.sent = null; state.sheetOpen = false; render(); };
-  function openSheet() { state.sheetOpen = true; renderPanel(); setTimeout(function () { var f = document.getElementById('f-name'); if (f && !f.value) f.focus({ preventScroll: true }); }, 350); }
+  function openSheet() { state.sheetOpen = true; renderPanel(); if (!window.matchMedia('(pointer: coarse)').matches) setTimeout(function () { var f = document.getElementById('f-name'); if (f && !f.value) f.focus({ preventScroll: true }); }, 350); }
   function minSheet() { if (state.sent) { state.sent = null; } state.sheetOpen = false; renderPanel(); }
   document.getElementById('sheet-bar').onclick = openSheet;
   document.getElementById('sheet-min').onclick = minSheet;
@@ -617,6 +653,19 @@ function boot() {
   window.matchMedia('(max-width: 760px)').addEventListener('change', renderPanel);
   document.getElementById('dock-go').onclick = function () { var p = document.getElementById('panel'); p.scrollIntoView({ behavior: 'smooth', block: 'start' }); setTimeout(function () { document.getElementById('f-name').focus({ preventScroll: true }); }, 400); };
 
+  (function () {
+    var vv = window.visualViewport; if (!vv) return;
+    var root = document.documentElement;
+    var fit = function () {
+      var kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      root.style.setProperty('--kb', kb + 'px'); root.style.setProperty('--vvh', vv.height + 'px');
+    };
+    vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); fit();
+    ['f-name', 'f-note'].forEach(function (id) {
+      document.getElementById(id).addEventListener('focus', function () { var el = this; setTimeout(function () { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 300); });
+    });
+    document.getElementById('f-name').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('f-note').focus(); } });
+  })();
   document.getElementById('clear').onclick = function () { state.sel.clear(); persist(); hideNote(); render(); };
   var goDay = function (g) { g = Math.max(0, Math.min(DAYS.length - 1, g)); state.week = Math.floor(g / 7); state.dayIdx = g % 7; render(); };
   document.getElementById('prev').onclick = function () {
