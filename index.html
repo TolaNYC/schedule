@@ -646,9 +646,30 @@ function boot() {
     renderPanel();
   }
 
+  function selRange() {
+    var us = [], day = null;
+    state.sel.forEach(function (x) { var q = x.split('|'); day = q[0]; us.push(+q[1]); });
+    us.sort(function (a, b) { return a - b; });
+    return { day: day, lo: us[0], hi: us[us.length - 1], n: us.length };
+  }
+  // Keep only one continuous block (used for selections restored from an earlier visit).
+  function oneBlock() {
+    var gs = groups(); if (gs.length < 2) return;
+    var g = gs[0]; state.sel.clear(); for (var x = g.a; x < g.b; x++) state.sel.add(g.date + '|' + x);
+  }
   function toggle(e) {
-    var k = e.currentTarget.dataset.key;
-    if (state.sel.has(k)) state.sel.delete(k); else state.sel.add(k);
+    var k = e.currentTarget.dataset.key, p = k.split('|'), d = p[0], u = +p[1], r = selRange(), x;
+    if (state.sel.has(k)) {
+      // Tapping an end shrinks the block; tapping inside keeps the part before it.
+      if (u === r.lo) state.sel.delete(k); else for (x = u; x <= r.hi; x++) state.sel.delete(d + '|' + x);
+    } else if (!r.n || (d === r.day && (u === r.hi + 1 || u === r.lo - 1))) {
+      state.sel.add(k);
+    } else {
+      var st = d === r.day ? dayStatus(d, nyNow()) : null, a = Math.min(u, r.lo), b = Math.max(u, r.hi), ok = !!st;
+      for (x = a; ok && x <= b; x++) if (st[x] !== 'free') ok = false;
+      if (ok) { for (x = a; x <= b; x++) state.sel.add(d + '|' + x); }
+      else { state.sel.clear(); state.sel.add(k); toast('One request covers one continuous block of time'); }
+    }
     state.sent = null; persist(); hideNote(); render();
   }
 
@@ -822,6 +843,7 @@ function boot() {
   // Start on today's day in the phone view.
   (function () { var now = nyNow(), idx = DAYS.indexOf(now.date); if (idx >= 0) { state.week = Math.floor(idx / 7); state.dayIdx = idx % 7; } })();
   window.matchMedia('(max-width: 760px)').addEventListener('change', render);
+  oneBlock(); persist();
   render(); renderSync();
   // Pending requests summary at the top of the page.
   (function () {
