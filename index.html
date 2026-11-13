@@ -817,6 +817,26 @@ html,body{background:var(--bg)}
 .bar-x:hover{background:rgba(233,236,223,.08)!important;color:var(--text)!important}
 @media (max-width: 420px){ .bar-dur{display:none} .bar-text strong#bar-count{font-size:14px!important} .bar-cta{padding:0 12px!important} }
 @media (max-width: 330px){ .bar-cta::after{display:none} .bar-text{padding-left:9px} }
+
+/* ================= Soothing pass ================= */
+:root:not(#_){--text:#d2d6c7; --muted:#959a88; --accent:#c4c9b7; --accent-hover:#cfd3c3; --on-accent:#14180f;
+  --brand:#c4c9b7; --brand-hover:#cfd3c3; --brand-text:#14180f; --sel:#bfc4b1; --sel-text:#14180f; --now:#b7bca9; --ok:#b7bca9}
+.panel[data-state="peek"],.panel[data-state="closed"]:not([data-was="open"]){
+  background:rgba(17,21,14,.92)!important;border:1px solid rgba(210,214,199,.08)!important;
+  box-shadow:0 8px 22px rgba(0,0,0,.35)!important}
+.bar-text::before{background:#8f9682;box-shadow:none;width:2px}
+.bar-text strong#bar-count{font-weight:500;color:var(--text)}
+.bar-text small#bar-sub{font-weight:500;letter-spacing:.12em;color:var(--faint)!important}
+.bar-dur{border-color:rgba(210,214,199,.1);color:var(--faint)}
+.bar-cta{background:#b9bea9!important;color:#14180f!important;box-shadow:none!important;font-weight:500}
+.sheet-bar:hover .bar-cta{background:#c6cab7!important}
+.btn-send:not([aria-disabled="true"]){background:#b9bea9!important;border-color:#b9bea9!important}
+.btn-send:not([aria-disabled="true"]):hover{background:#c6cab7!important}
+.dayhead.today strong{background:#b9bea9!important;color:#14180f!important}
+.strip button[aria-pressed="true"]{background:#b9bea9!important;border-color:#b9bea9!important}
+.nowline::before{background:var(--now)}
+.toast::before{background:#8f9682!important;color:#14180f!important}
+.seg button[aria-pressed="true"]{color:var(--text)}
 </style>
 
 </head>
