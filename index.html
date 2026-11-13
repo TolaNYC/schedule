@@ -786,6 +786,15 @@ html,body{background:var(--bg)}
 .slot.slot-past:not(:last-child){height:calc(var(--slot) + 1px)!important}
 .grid.narrow .blk.pend{color:transparent!important;padding:0}
 @media (max-width: 330px){ .panel[data-state="peek"] .bar-text small{font-size:10.5px} .panel[data-state="peek"] .bar-text strong{font-size:13px} .panel[data-state="peek"] .bar-cta{padding:0 10px;font-size:13px} .bar-x{width:28px;margin-left:2px} }
+
+/* ================= closing the bar: fade in place, never show the old bottom sheet ================= */
+.panel[data-state="closed"]{visibility:hidden;pointer-events:none;transition:opacity .2s ease,transform .2s ease,visibility 0s linear .2s}
+.panel[data-state="closed"]:not([data-was="open"]){top:var(--nav-top,8px)!important;left:var(--nav-left,8px)!important;width:var(--nav-w,auto)!important;right:auto!important;bottom:auto!important;height:var(--nav-h,48px)!important;max-height:none!important;border-radius:8px!important;padding:0!important;display:flex;align-items:stretch;overflow:hidden;transform:translateY(-6px)!important}
+.panel[data-state="closed"]:not([data-was="open"]) .sheet-body{display:none!important}
+.panel[data-state="closed"]:not([data-was="open"]) .sheet-bar{display:flex!important;flex:1;min-width:0;height:100%;padding:0 6px 0 4px;gap:10px;animation:none}
+.panel[data-state="closed"]:not([data-was="open"]) .bar-x{display:inline-flex}
+.panel[data-state="closed"]:not([data-was="open"]) .handle,.panel[data-state="closed"]:not([data-was="open"]) .bar-orb{display:none}
+.panel[data-state="peek"],.panel[data-state="open"]{visibility:visible}
 </style>
 
 </head>
