@@ -1276,7 +1276,7 @@ function boot() {
   });
   document.getElementById('again').onclick = function () { state.sent = null; state.sheetOpen = false; render(); };
   function openSheet() { state.sheetOpen = true; renderPanel(); if (!window.matchMedia('(pointer: coarse)').matches) setTimeout(function () { var f = document.getElementById('f-name'); if (f && !f.value) f.focus({ preventScroll: true }); }, 350); }
-  function minSheet() { if (state.sent) { state.sent = null; } state.sheetOpen = false; renderPanel(); }
+  function minSheet() { state.sent = null; state.sheetOpen = false; state.sel.clear(); persist(); hideNote(); render(); }
   document.getElementById('sheet-bar').onclick = openSheet;
   document.getElementById('sheet-min').onclick = minSheet;
   document.getElementById('backdrop').onclick = minSheet;
