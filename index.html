@@ -698,7 +698,7 @@ html,body{background:var(--bg)}
 
 /* ================= Simple timeline ================= */
 :root:not(#_){--bg:#14180f; --surface:#14180f; --surface-2:#1b2015; --surface-3:#262d1e; --line:#262d1e; --line-strong:#353e2b;
-  --free-hover:#2a3221; --hatch-a:#252b1d; --hatch-b:#181c12; --busy:#1c2116; --busy-line:#4a2d2a; --past-text:transparent}
+  --free-hover:#2a3221; --hatch-a:#1e2318; --hatch-b:#181c12; --busy:#1c2116; --busy-line:#4a2d2a; --past-text:transparent}
 .col{background:repeating-linear-gradient(to bottom,var(--line) 0 1px,transparent 1px calc(var(--slot) * 2));border-left:1px solid var(--line)}
 /* open half-hours: invisible until hovered; selected ones become chips */
 .slot{background:transparent!important;border:0!important;border-radius:6px;color:transparent!important;box-shadow:none;padding:0 8px;font-weight:600}
@@ -707,8 +707,8 @@ html,body{background:var(--bg)}
 .slot:active{transform:none}
 /* busy, buffer and passed time: one continuous hatched area */
 .blk,.slot.slot-past{left:0!important;right:0!important;border-radius:0!important}
-.blk.busy,.blk.buf,.blk.past,.slot.slot-past,.slot.slot-past:hover{background:repeating-linear-gradient(135deg,var(--hatch-a) 0 5px,var(--hatch-b) 5px 11px)!important;background-attachment:fixed!important;color:transparent!important;border:0!important;box-shadow:none!important;cursor:default}
-.blk.busy{background:repeating-linear-gradient(135deg,#2e2620 0 5px,#1b1a13 5px 11px)!important;background-attachment:fixed!important}
+.blk.busy,.blk.buf,.blk.past,.slot.slot-past,.slot.slot-past:hover{background:repeating-linear-gradient(135deg,var(--hatch-a) 0 1.5px,var(--hatch-b) 1.5px 4px)!important;background-attachment:fixed!important;color:transparent!important;border:0!important;box-shadow:none!important;cursor:default}
+.blk.busy{background:repeating-linear-gradient(135deg,#25221b 0 1.5px,#1a1b13 1.5px 4px)!important;background-attachment:fixed!important}
 .blk.pend{left:2px!important;right:2px!important;border-radius:6px!important;font-size:11px}
 .grid.mini .slot,.grid.mini .blk{left:0;right:0}
 /* headers and time rail */
