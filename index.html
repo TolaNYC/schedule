@@ -795,6 +795,28 @@ html,body{background:var(--bg)}
 .panel[data-state="closed"]:not([data-was="open"]) .bar-x{display:inline-flex}
 .panel[data-state="closed"]:not([data-was="open"]) .handle,.panel[data-state="closed"]:not([data-was="open"]) .bar-orb{display:none}
 .panel[data-state="peek"],.panel[data-state="open"]{visibility:visible}
+
+/* ================= Selection bar v2 ================= */
+.panel[data-state="peek"],.panel[data-state="closed"]:not([data-was="open"]){
+  background:linear-gradient(180deg,rgba(233,236,223,.07),rgba(233,236,223,.02)),rgba(14,17,11,.94)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(1.25);backdrop-filter:blur(16px) saturate(1.25);
+  border:1px solid rgba(233,236,223,.13)!important;border-radius:14px!important;
+  box-shadow:0 12px 32px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06)!important}
+.panel[data-state="peek"] .sheet-bar,.panel[data-state="closed"]:not([data-was="open"]) .sheet-bar{gap:12px;padding:0 8px 0 2px}
+.bar-text{position:relative;display:flex!important;flex-direction:column;justify-content:center;gap:1px;padding-left:12px;min-width:0}
+.bar-text::before{content:"";position:absolute;left:0;top:18%;bottom:18%;width:3px;border-radius:3px;background:linear-gradient(180deg,#e9ecdf,#8f9a77);box-shadow:0 0 10px rgba(233,236,223,.35)}
+.bar-text small#bar-sub{order:-1;font-family:var(--font)!important;font-size:10.5px!important;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-text strong#bar-count{font-size:15px!important;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.bar-text strong#bar-count i{font-style:normal;color:var(--faint);margin:0 6px;font-weight:400}
+.bar-dur{flex:none;font-size:12px;font-weight:500;color:var(--muted);border:1px solid rgba(233,236,223,.16);border-radius:999px;padding:3px 10px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar-cta{display:inline-flex!important;align-items:center;gap:8px;background:var(--text)!important;color:var(--bg)!important;border:0!important;border-radius:10px!important;font-weight:600;letter-spacing:-.005em;box-shadow:0 4px 14px rgba(233,236,223,.12)}
+.bar-cta::after{content:"→";display:inline-block;transition:transform .2s ease}
+.sheet-bar:hover .bar-cta{background:#ffffff!important}
+.sheet-bar:hover .bar-cta::after{transform:translateX(3px)}
+.bar-x{border-radius:999px!important;width:30px!important;height:30px!important;color:var(--muted)!important;font-size:14px!important;margin-left:8px!important}
+.bar-x:hover{background:rgba(233,236,223,.08)!important;color:var(--text)!important}
+@media (max-width: 420px){ .bar-dur{display:none} .bar-text strong#bar-count{font-size:14px!important} .bar-cta{padding:0 12px!important} }
+@media (max-width: 330px){ .bar-cta::after{display:none} .bar-text{padding-left:9px} }
 </style>
 
 </head>
@@ -843,7 +865,7 @@ html,body{background:var(--bg)}
         <span class="handle" aria-hidden="true"></span>
         <span class="bar-orb" aria-hidden="true"></span>
         <span class="bar-text"><strong id="bar-count">0 slots</strong><small id="bar-sub">Tap to add your name and send</small></span>
-        <span class="bar-cta">Continue</span>
+        <span class="bar-dur" id="bar-dur"></span><span class="bar-cta">Continue</span>
       </button>
       <div class="sheet-body" id="sheet-body">
         <div class="panel-head"><h2>Request time</h2><span class="total-pill" id="total-pill" hidden></span><button type="button" class="sheet-min" id="sheet-min" aria-label="Close">✕</button></div>
@@ -1152,8 +1174,11 @@ function boot() {
     document.getElementById('sheet-bar').setAttribute('aria-expanded', String(sheetState === 'open'));
     document.getElementById('backdrop').classList.toggle('on', sheetState === 'open');
     var cnt = state.sel.size + (state.sel.size > 1 ? ' slots · ' : ' slot · ') + total();
-    document.getElementById('bar-count').textContent = cnt;
-    var gs = groups(); document.getElementById('bar-sub').textContent = gs.length ? gs.map(function (g) { return g.day + ' ' + g.times; }).join(' · ') : '';
+
+    var gs = groups(), g0 = gs[0];
+    document.getElementById('bar-count').innerHTML = g0 ? fmtC(uMin(g0.a)) + '<i>→</i>' + fmtC(uMin(g0.b)) : '';
+    document.getElementById('bar-sub').textContent = g0 ? fmtDate(g0.date, { weekday: 'short', month: 'short', day: 'numeric' }) : '';
+    document.getElementById('bar-dur').textContent = total().replace(' h', 'h').replace(' min', 'm');
     if (sheetState === 'peek' && state.lastCount !== state.sel.size && prevState === 'peek') { panelEl.classList.remove('bump'); void panelEl.offsetWidth; panelEl.classList.add('bump'); }
     state.lastCount = state.sel.size;
     document.getElementById('dock-text').textContent = state.sel.size + (state.sel.size > 1 ? ' slots · ' : ' slot · ') + total();
