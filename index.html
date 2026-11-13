@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#14180f" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#14180f" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0d100b" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d100b" media="(prefers-color-scheme: dark)">
 <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0}</style>
 <title>Artur's Schedule</title>
 <style>
@@ -722,6 +722,26 @@ html,body{background:var(--bg)}
 .sw-free{background:transparent;border:1px solid var(--line-strong)!important}
 .sw-busy{background:repeating-linear-gradient(135deg,#3a2e26 0 2px,#1b1a13 2px 4px)!important;border:1px solid var(--line-strong)!important}
 .sw-buf{background:repeating-linear-gradient(135deg,var(--hatch-a) 0 2px,var(--hatch-b) 2px 4px)!important;border:1px solid var(--line-strong)!important}
+
+/* ================= Consistency pass ================= */
+:root:not(#_){--bg:#0d100b; --surface:#0d100b; --surface-2:#13170f; --surface-3:#1c2117; --line:#1b2016; --line-strong:#283023;
+  --muted:#9ea392; --faint:#6b7161; --free-hover:#1f2519; --hatch-a:#252c1f; --hatch-b:#0f120c; --hatch-busy:#2e2822;
+  --pend:#1a1824; --pend-line:#5d5590; --pend-text:#c9c3f3; --input-line:#2c3426; --shadow-lg:0 18px 48px rgba(0,0,0,.7)}
+.blk.busy,.blk.buf,.blk.past,.slot.slot-past,.slot.slot-past:hover{background:repeating-linear-gradient(135deg,var(--hatch-a) 0 1.5px,var(--hatch-b) 1.5px 5px)!important;background-attachment:fixed!important}
+.blk.busy{background:repeating-linear-gradient(135deg,var(--hatch-busy) 0 1.5px,var(--hatch-b) 1.5px 5px)!important;background-attachment:fixed!important}
+.blk.pend{left:0!important;right:0!important;border-radius:0!important;border:0!important;background:var(--pend)!important;box-shadow:inset 2px 0 0 var(--pend-line)!important;color:var(--pend-text)!important;font-size:11px;font-weight:500;padding:4px 8px;align-items:flex-start}
+.legend span:has(.sw-buf){display:none}
+.legend b{width:10px;height:10px;border-radius:3px}
+.sw-busy{background:repeating-linear-gradient(135deg,#4a4036 0 1px,var(--hatch-b) 1px 3px)!important;border:1px solid var(--line-strong)!important}
+.sw-pend{background:var(--pend)!important;border:1px solid var(--pend-line)!important}
+.sw-free{background:transparent!important;border:1px solid var(--line-strong)!important}
+.slot:hover{background:var(--surface-3)!important}
+.panel,.panel[data-state="peek"]{background:var(--surface-2)}
+.btn-icon,.seg{background:var(--surface-2);border-color:var(--line)}
+.seg button[aria-pressed="true"]{background:var(--surface-3)}
+.nav{border-bottom-color:var(--line)}
+.dayhead small{color:var(--muted)}
+.times span{color:var(--faint)}
 </style>
 
 </head>
