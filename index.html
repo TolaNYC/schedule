@@ -742,6 +742,24 @@ html,body{background:var(--bg)}
 .nav{border-bottom-color:var(--line)}
 .dayhead small{color:var(--muted)}
 .times span{color:var(--faint)}
+
+/* ================= Clean request dialog ================= */
+#reqform .fine,#clear,.field .req,.chip-x{display:none!important}
+.panel[data-state="open"] .sheet-body{padding:18px 20px 20px;gap:14px}
+.panel-head{gap:10px}
+.panel-head h2{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.total-pill{background:transparent!important;color:var(--muted)!important;font-weight:500;padding:0!important;font-size:13px}
+.sheet-min{background:transparent!important;border:0!important;width:28px;height:28px;color:var(--muted)!important;border-radius:6px}
+.sheet-min:hover{background:var(--surface-3)!important;color:var(--text)!important}
+.chips{gap:6px}
+.chip{background:var(--surface-3)!important;border:0!important;border-radius:10px;padding:10px 14px;display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.chip strong{font-size:14px;font-weight:600}
+.chip span{font-size:13px;color:var(--muted)}
+.field{font-size:12px;font-weight:500;color:var(--muted);gap:6px}
+.input{background:var(--bg)!important;border:1px solid var(--line-strong)!important;border-radius:10px;padding:11px 13px;resize:none}
+.input:focus{border-color:var(--muted)!important;box-shadow:none!important}
+.btn-send{min-height:46px;border-radius:10px;margin-top:4px;font-size:15px}
+.note{border-radius:10px}
 </style>
 
 </head>
@@ -793,7 +811,7 @@ html,body{background:var(--bg)}
         <span class="bar-cta">Continue</span>
       </button>
       <div class="sheet-body" id="sheet-body">
-        <div class="panel-head"><h2>Your request</h2><span class="total-pill" id="total-pill" hidden></span><button type="button" class="sheet-min" id="sheet-min" aria-label="Close">✕</button></div>
+        <div class="panel-head"><h2>Request time</h2><span class="total-pill" id="total-pill" hidden></span><button type="button" class="sheet-min" id="sheet-min" aria-label="Close">✕</button></div>
         <div class="empty" id="empty" hidden></div>
         <form id="reqform" hidden novalidate>
           <ul class="chips" id="chips" aria-label="Selected times"></ul>
@@ -802,7 +820,7 @@ html,body{background:var(--bg)}
           <div class="note" id="note" hidden></div>
           <a class="btn btn-primary btn-send" id="send" href="#" role="button">Send request</a>
           <button type="button" class="btn btn-ghost" id="clear">Clear selection</button>
-          <p class="fine">Artur approves every request. Approved times turn busy here.</p>
+          
         </form>
         <div class="sent" id="sent" hidden>
           <div class="check" aria-hidden="true">✓</div>
