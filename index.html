@@ -871,6 +871,18 @@ html,body{background:var(--bg)}
 .btn-send{border-radius:10px!important}
 .btn-send[aria-disabled="true"]{background:rgba(210,214,199,.08)!important;color:var(--faint)!important;opacity:1!important;border:1px solid rgba(210,214,199,.06)!important}
 .note{background:rgba(160,122,110,.1)!important;color:#c9a397!important;border:1px solid rgba(160,122,110,.2)!important}
+
+/* ================= Toasts ================= */
+.toast{white-space:normal!important;max-width:min(380px, calc(100vw - 32px))!important;width:max-content;
+  background:rgba(17,21,14,.95)!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border:1px solid rgba(210,214,199,.1)!important;border-radius:12px!important;box-shadow:0 10px 28px rgba(0,0,0,.45)!important;
+  color:var(--text)!important;padding:11px 16px 11px 12px!important;gap:10px!important;align-items:center!important;font-size:13.5px!important;font-weight:500!important;line-height:1.35}
+.toast::before{flex:none;width:20px!important;height:20px!important;font-size:11px!important;background:rgba(143,150,130,.25)!important;color:#c6cab7!important}
+.toast[data-kind="info"]::before{content:"i";font-weight:700;font-style:italic;font-family:Georgia,serif}
+.toast .t-body{display:flex;flex-direction:column;gap:1px;min-width:0}
+.toast .t-body strong{font-weight:600;font-size:13.5px}
+.toast .t-body span{font-size:12px;color:var(--muted);font-weight:400}
+@media (max-width: 420px){ .toast{bottom:calc(14px + env(safe-area-inset-bottom, 0px))!important} }
 </style>
 
 </head>
@@ -1175,7 +1187,7 @@ function boot() {
       var st = d === r.day ? dayStatus(d, nyNow()) : null, a = Math.min(u, r.lo), b = Math.max(u, r.hi), ok = !!st;
       for (x = a; ok && x <= b; x++) if (st[x] !== 'free') ok = false;
       if (ok) { for (x = a; x <= b; x++) state.sel.add(d + '|' + x); }
-      else { state.sel.clear(); state.sel.add(k); toast('One request covers one continuous block of time'); }
+      else { state.sel.clear(); state.sel.add(k); toast('Started a new selection', 'info', 'A request covers one continuous block of time.'); }
     }
     state.sent = null; persist(); hideNote(); render();
   }
@@ -1263,7 +1275,7 @@ function boot() {
   function ready() { return !!(nameVal() && noteVal()); }
   function syncSend() { var s = document.getElementById('send'); s.setAttribute('aria-disabled', String(!ready())); }
   var toastT = null;
-  function toast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 4000); }
+  function toast(msg, kind, sub) { var t = document.getElementById('toast'); t.dataset.kind = kind || 'ok'; if (sub) { t.innerHTML = '<span class="t-body"><strong></strong><span></span></span>'; t.querySelector('strong').textContent = msg; t.querySelector('.t-body span').textContent = sub; } else t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 4000); }
   function finish(msg) {
     // Show the new times as pending right away; live data confirms them a moment later.
     groups().forEach(function (g) { (PENDING[g.date] = PENDING[g.date] || []).push([hhmm_(uMin(g.a)), hhmm_(uMin(g.b))]); });
