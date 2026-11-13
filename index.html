@@ -816,7 +816,7 @@ html,body{background:var(--bg)}
 .bar-x{border-radius:999px!important;width:30px!important;height:30px!important;color:var(--muted)!important;font-size:14px!important;margin-left:8px!important}
 .bar-x:hover{background:rgba(233,236,223,.08)!important;color:var(--text)!important}
 @media (max-width: 420px){ .bar-dur{display:none} .bar-text strong#bar-count{font-size:14px!important} .bar-cta{padding:0 12px!important} }
-@media (max-width: 330px){ .bar-cta::after{display:none} .bar-text{padding-left:9px} }
+@media (max-width: 330px){ .bar-cta::after{display:none} .bar-text{padding-left:9px} .bar-text strong#bar-count{font-size:12.5px!important} .bar-text strong#bar-count i{margin:0 3px} .panel[data-state="peek"] .sheet-bar{gap:8px} }
 
 /* ================= Soothing pass ================= */
 :root:not(#_){--text:#d2d6c7; --muted:#959a88; --accent:#c4c9b7; --accent-hover:#cfd3c3; --on-accent:#14180f;
@@ -837,6 +837,40 @@ html,body{background:var(--bg)}
 .nowline::before{background:var(--now)}
 .toast::before{background:#8f9682!important;color:#14180f!important}
 .seg button[aria-pressed="true"]{color:var(--text)}
+
+/* ================= am/pm everywhere ================= */
+.grid.narrow .slot{font-size:9.5px;letter-spacing:-.03em;padding:0 2px;justify-content:center}
+.slot[aria-pressed="true"].sel-s{align-items:center!important;padding-top:0!important}
+.grid.mini .slot{font-size:8.5px;letter-spacing:-.04em;padding:0 2px}
+.grid.narrow .slot.long{font-size:8px;letter-spacing:-.05em;padding:0 1px}
+.grid.mini .slot.long{font-size:7px;letter-spacing:-.06em;padding:0}
+.grid.short .slot[aria-pressed="true"].sel-s{font-size:8px!important;line-height:8px}
+.grid.short .slot.sel-s{clip-path:inset(1px 2px 0 2px round 4px 4px 0 0)}
+.grid.short .slot.sel-s.sel-e{clip-path:inset(1px 2px round 4px)}
+.grid.short .slot.sel-e{clip-path:inset(0 2px 1px 2px round 0 0 4px 4px)}
+/* ================= Request dialog, themed like the top bar ================= */
+.panel[data-state="open"],.panel[data-state="closed"][data-was="open"]{
+  background:rgba(17,21,14,.96)!important;-webkit-backdrop-filter:blur(16px) saturate(1.2);backdrop-filter:blur(16px) saturate(1.2);
+  border:1px solid rgba(210,214,199,.09)!important;border-radius:16px!important;box-shadow:0 18px 50px rgba(0,0,0,.55)!important}
+.panel[data-state="open"] .sheet-body{padding:18px 18px 18px!important;gap:16px!important}
+.panel-head h2{font-size:11px!important;font-weight:600!important;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.total-pill{border:1px solid rgba(210,214,199,.1)!important;border-radius:999px!important;padding:2px 10px!important;font-size:12px!important;color:var(--faint)!important;margin-left:auto}
+.chips{gap:8px}
+.chip{position:relative;display:flex!important;flex-direction:column;align-items:flex-start!important;gap:2px;background:rgba(210,214,199,.04)!important;border:1px solid rgba(210,214,199,.07)!important;border-radius:12px!important;padding:12px 14px 12px 22px!important}
+.chip::before{content:"";position:absolute;left:12px;top:14px;bottom:14px;width:2px;border-radius:2px;background:#8f9682}
+.chip strong{font-size:10.5px!important;font-weight:500!important;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.chip span{font-size:18px!important;font-weight:500;color:var(--text)!important;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.chip span i{font-style:normal;color:var(--faint);margin:0 8px;font-weight:400}
+.field{font-size:12px!important;color:var(--muted)!important;font-weight:500}
+.field > span:first-child{display:flex;align-items:baseline;justify-content:space-between}
+.field > span:first-child::after{content:"Required";font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#a07a6e}
+.field:has(.input:valid) > span:first-child::after{content:"✓";letter-spacing:0;font-size:12px;color:#8f9682}
+.input{background:rgba(210,214,199,.03)!important;border:1px solid rgba(210,214,199,.1)!important;border-radius:10px!important}
+.input:focus{border-color:rgba(210,214,199,.28)!important;background:rgba(210,214,199,.05)!important}
+.input[aria-invalid="true"]{border-color:#8a5a50!important;box-shadow:none!important}
+.btn-send{border-radius:10px!important}
+.btn-send[aria-disabled="true"]{background:rgba(210,214,199,.08)!important;color:var(--faint)!important;opacity:1!important;border:1px solid rgba(210,214,199,.06)!important}
+.note{background:rgba(160,122,110,.1)!important;color:#c9a397!important;border:1px solid rgba(160,122,110,.2)!important}
 </style>
 
 </head>
@@ -991,6 +1025,7 @@ function boot() {
 
   var LABEL = { busy: '', buf: '', pend: 'Pending', past: '' };
   var fmtC = function (m) { var h = Math.floor(m / 60) % 24, mm = m % 60; return (((h + 11) % 12) + 1) + ':' + String(mm).padStart(2, '0') + (h < 12 ? 'am' : 'pm'); };
+  var fmtS = function (m) { var h = Math.floor(m / 60) % 24, mm = m % 60; return (((h + 11) % 12) + 1) + (mm ? ':' + String(mm).padStart(2, '0') : '') + (h < 12 ? 'am' : 'pm'); };
   var ordn = function (n) { n = +n; var s = (n % 100 >= 11 && n % 100 <= 13) ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'); return n + s; };
 
   function render() {
@@ -1061,8 +1096,9 @@ function boot() {
           var pOn = on && u > 0 && st[u - 1] === 'free' && state.sel.has(d + '|' + (u - 1)), nOn = on && u + 1 < N && st[u + 1] === 'free' && state.sel.has(d + '|' + (u + 1));
           if (on) { if (!pOn) b.classList.add('sel-s'); if (!nOn) b.classList.add('sel-e'); }
           if (on && !pOn) { var ue = u; while (ue + 1 < N && st[ue + 1] === 'free' && state.sel.has(d + '|' + (ue + 1))) ue++;
-            b.textContent = isNarrow ? fmtT(uMin(u), false) : colW < 150 ? fmtC(uMin(u)) : fmtC(uMin(u)) + ' – ' + fmtC(uMin(ue + 1)); }
-          else b.textContent = isNarrow ? fmtT(uMin(u), false) : fmtC(uMin(u));
+            b.textContent = colW >= 150 ? fmtC(uMin(u)) + ' – ' + fmtC(uMin(ue + 1)) : colW >= 115 ? fmtS(uMin(u)) + ' – ' + fmtS(uMin(ue + 1)) : fmtS(uMin(u)); }
+          else b.textContent = isNarrow ? fmtS(uMin(u)) : fmtC(uMin(u));
+          if (isNarrow && b.textContent.length > 5) { if (isMini) { b.textContent = b.textContent.replace(/m$/, ''); if (b.textContent.length > 5) b.classList.add('long'); } else b.classList.add('long'); }
           b.setAttribute('aria-pressed', String(on));
           b.setAttribute('aria-label', fmtDate(d, { weekday: 'short', month: 'short', day: 'numeric' }) + ', ' + fmtT(uMin(u), true) + ' to ' + fmtT(uMin(u) + 30, true) + ', open');
           b.dataset.key = key;
@@ -1196,7 +1232,7 @@ function boot() {
     var cnt = state.sel.size + (state.sel.size > 1 ? ' slots · ' : ' slot · ') + total();
 
     var gs = groups(), g0 = gs[0];
-    document.getElementById('bar-count').innerHTML = g0 ? fmtC(uMin(g0.a)) + '<i>→</i>' + fmtC(uMin(g0.b)) : '';
+    var fB = window.innerWidth < 360 ? fmtS : fmtC; document.getElementById('bar-count').innerHTML = g0 ? fB(uMin(g0.a)) + '<i>→</i>' + fB(uMin(g0.b)) : '';
     document.getElementById('bar-sub').textContent = g0 ? fmtDate(g0.date, { weekday: 'short', month: 'short', day: 'numeric' }) : '';
     document.getElementById('bar-dur').textContent = total().replace(' h', 'h').replace(' min', 'm');
     if (sheetState === 'peek' && state.lastCount !== state.sel.size && prevState === 'peek') { panelEl.classList.remove('bump'); void panelEl.offsetWidth; panelEl.classList.add('bump'); }
@@ -1206,7 +1242,7 @@ function boot() {
     groups().forEach(function (g) {
       var li = document.createElement('li'); li.className = 'chip';
       var d = document.createElement('strong'); d.textContent = g.day;
-      var tm = document.createElement('span'); tm.textContent = g.times;
+      var tm = document.createElement('span'); tm.innerHTML = fmtC(uMin(g.a)) + '<i>→</i>' + fmtC(uMin(g.b));
       var x = document.createElement('button'); x.type = 'button'; x.className = 'chip-x'; x.textContent = '×';
       x.setAttribute('aria-label', 'Remove ' + g.day + ', ' + g.times);
       x.onclick = function () { for (var u = g.a; u < g.b; u++) state.sel.delete(g.date + '|' + u); persist(); hideNote(); render(); };
