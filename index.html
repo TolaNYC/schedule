@@ -760,6 +760,32 @@ html,body{background:var(--bg)}
 .input:focus{border-color:var(--muted)!important;box-shadow:none!important}
 .btn-send{min-height:46px;border-radius:10px;margin-top:4px;font-size:15px}
 .note{border-radius:10px}
+
+/* ================= QA fixes ================= */
+.slot{clip-path:inset(2px round 6px)}
+.slot:hover{box-shadow:none!important}
+.slot[aria-pressed="true"]{box-shadow:none!important;border-radius:0!important;clip-path:inset(0 2px)}
+.slot.sel-s{clip-path:inset(2px 2px 0 2px round 6px 6px 0 0)}
+.slot.sel-e{clip-path:inset(0 2px 2px 2px round 0 0 6px 6px)}
+.slot.sel-s.sel-e{clip-path:inset(2px round 6px)}
+.slot[aria-pressed="true"]:not(.sel-s){color:transparent!important}
+.slot[aria-pressed="true"].sel-s{overflow:visible;white-space:nowrap;z-index:3;align-items:flex-start;padding-top:max(0px, calc((var(--slot) - 14px) / 2))}
+.strip button[aria-pressed="true"],.strip button[aria-pressed="true"] small,.strip button[aria-pressed="true"] strong{color:var(--on-accent)!important}
+.strip button[aria-pressed="true"]{background:var(--accent)!important;border-color:var(--accent)!important}
+.strip button{background:var(--surface-2);border:1px solid var(--line)}
+.strip button:hover{border-color:var(--line-strong)}
+.strip button small{color:var(--muted)}
+.strip button strong{color:var(--text)}
+.strip button.today:not([aria-pressed="true"]){box-shadow:inset 0 -2px 0 var(--text)}
+
+/* ================= QA round 2 ================= */
+.slot[aria-pressed="true"],.slot[aria-pressed="true"]:hover{background:var(--sel)!important;color:var(--sel-text)!important}
+.slot[aria-pressed="true"]:not(.sel-s):hover{color:transparent!important}
+.slot[aria-pressed="true"]:not(.sel-e){height:calc(var(--slot) + 1px)!important}
+.slot.slot-past,.slot.slot-past:hover{clip-path:none!important}
+.slot.slot-past:not(:last-child){height:calc(var(--slot) + 1px)!important}
+.grid.narrow .blk.pend{color:transparent!important;padding:0}
+@media (max-width: 330px){ .panel[data-state="peek"] .bar-text small{font-size:10.5px} .panel[data-state="peek"] .bar-text strong{font-size:13px} .panel[data-state="peek"] .bar-cta{padding:0 10px;font-size:13px} .bar-x{width:28px;margin-left:2px} }
 </style>
 
 </head>
@@ -945,7 +971,8 @@ function boot() {
     week.forEach(function (d, i) {
       var b = document.createElement('button');
       b.setAttribute('aria-pressed', String(i === state.dayIdx));
-      b.innerHTML = '<small>' + fmtDate(d, { weekday: 'short' }) + '</small><strong>' + (isNarrow ? fmtDate(d, { day: 'numeric' }) : ordn(fmtDate(d, { day: 'numeric' }))) + '</strong>';
+      if (d === now.date) b.className = 'today';
+      b.innerHTML = '<small>' + fmtDate(d, { weekday: 'short' }) + '</small><strong>' + (window.innerWidth < 560 ? fmtDate(d, { day: 'numeric' }) : ordn(fmtDate(d, { day: 'numeric' }))) + '</strong>';
       b.setAttribute('aria-label', fmtDate(d, { weekday: 'long', month: 'long', day: 'numeric' }) + ', ' + openCount(d) + ' open');
       b.onclick = function () { state.dayIdx = i; render(); };
       strip.appendChild(b);
@@ -980,7 +1007,11 @@ function boot() {
           var b = document.createElement('button');
           b.className = 'slot';
           b.style.top = (u * SL) + 'px'; b.style.height = SL + 'px';
-          b.textContent = isNarrow ? fmtT(uMin(u), false) : fmtC(uMin(u));
+          var pOn = on && u > 0 && st[u - 1] === 'free' && state.sel.has(d + '|' + (u - 1)), nOn = on && u + 1 < N && st[u + 1] === 'free' && state.sel.has(d + '|' + (u + 1));
+          if (on) { if (!pOn) b.classList.add('sel-s'); if (!nOn) b.classList.add('sel-e'); }
+          if (on && !pOn) { var ue = u; while (ue + 1 < N && st[ue + 1] === 'free' && state.sel.has(d + '|' + (ue + 1))) ue++;
+            b.textContent = isNarrow ? fmtT(uMin(u), false) : colW < 150 ? fmtC(uMin(u)) : fmtC(uMin(u)) + ' – ' + fmtC(uMin(ue + 1)); }
+          else b.textContent = isNarrow ? fmtT(uMin(u), false) : fmtC(uMin(u));
           b.setAttribute('aria-pressed', String(on));
           b.setAttribute('aria-label', fmtDate(d, { weekday: 'short', month: 'short', day: 'numeric' }) + ', ' + fmtT(uMin(u), true) + ' to ' + fmtT(uMin(u) + 30, true) + ', open');
           b.dataset.key = key;
