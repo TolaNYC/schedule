@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#1f2419" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1f2419" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#14180f" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14180f" media="(prefers-color-scheme: dark)">
 <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0}</style>
 <title>Artur's Schedule</title>
 <style>
@@ -695,6 +695,33 @@ html,body{background:var(--bg)}
   .seg button{padding:4px 8px}
   .cal-legend{gap:2px 8px;font-size:10.5px}
 }
+
+/* ================= Simple timeline ================= */
+:root:not(#_){--bg:#14180f; --surface:#14180f; --surface-2:#1b2015; --surface-3:#262d1e; --line:#262d1e; --line-strong:#353e2b;
+  --free-hover:#2a3221; --hatch-a:#252b1d; --hatch-b:#181c12; --busy:#1c2116; --busy-line:#4a2d2a; --past-text:transparent}
+.col{background:repeating-linear-gradient(to bottom,var(--line) 0 1px,transparent 1px calc(var(--slot) * 2));border-left:1px solid var(--line)}
+/* open half-hours: invisible until hovered; selected ones become chips */
+.slot{background:transparent!important;border:0!important;border-radius:6px;color:transparent!important;box-shadow:none;padding:0 8px;font-weight:600}
+.slot:hover{background:var(--surface-3)!important;color:var(--text)!important;box-shadow:inset 0 0 0 2px var(--bg)}
+.slot[aria-pressed="true"]{background:var(--sel)!important;color:var(--sel-text)!important;box-shadow:inset 0 0 0 2px var(--bg);z-index:2}
+.slot:active{transform:none}
+/* busy, buffer and passed time: one continuous hatched area */
+.blk,.slot.slot-past{left:0!important;right:0!important;border-radius:0!important}
+.blk.busy,.blk.buf,.blk.past,.slot.slot-past,.slot.slot-past:hover{background:repeating-linear-gradient(135deg,var(--hatch-a) 0 5px,var(--hatch-b) 5px 11px)!important;background-attachment:fixed!important;color:transparent!important;border:0!important;box-shadow:none!important;cursor:default}
+.blk.busy{background:repeating-linear-gradient(135deg,#2e2620 0 5px,#1b1a13 5px 11px)!important;background-attachment:fixed!important}
+.blk.pend{left:2px!important;right:2px!important;border-radius:6px!important;font-size:11px}
+.grid.mini .slot,.grid.mini .blk{left:0;right:0}
+/* headers and time rail */
+.dayhead{gap:6px;align-items:center}
+.dayhead small{font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.dayhead strong{font-size:14px;font-weight:500;color:var(--muted)}
+.dayhead.today strong{background:var(--text);color:var(--bg);border-radius:8px;padding:2px 7px;min-width:0;height:auto}
+.times span{font-size:11px;color:var(--muted)}
+.grid:not(.narrow){--timew:62px}
+.legend b{width:10px;height:10px;border-radius:3px}
+.sw-free{background:transparent;border:1px solid var(--line-strong)!important}
+.sw-busy{background:repeating-linear-gradient(135deg,#3a2e26 0 2px,#1b1a13 2px 4px)!important;border:1px solid var(--line-strong)!important}
+.sw-buf{background:repeating-linear-gradient(135deg,var(--hatch-a) 0 2px,var(--hatch-b) 2px 4px)!important;border:1px solid var(--line-strong)!important}
 </style>
 
 </head>
@@ -842,7 +869,9 @@ function boot() {
     return out;
   }
 
-  var LABEL = { busy: 'Busy', buf: 'Buffer', pend: 'Pending', past: '' };
+  var LABEL = { busy: '', buf: '', pend: 'Pending', past: '' };
+  var fmtC = function (m) { var h = Math.floor(m / 60) % 24, mm = m % 60; return (((h + 11) % 12) + 1) + ':' + String(mm).padStart(2, '0') + (h < 12 ? 'am' : 'pm'); };
+  var ordn = function (n) { n = +n; var s = (n % 100 >= 11 && n % 100 <= 13) ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'); return n + s; };
 
   function render() {
     var now = nyNow();
@@ -873,7 +902,7 @@ function boot() {
     week.forEach(function (d, i) {
       var b = document.createElement('button');
       b.setAttribute('aria-pressed', String(i === state.dayIdx));
-      b.innerHTML = '<small>' + fmtDate(d, { weekday: 'short' }) + '</small><strong>' + fmtDate(d, { day: 'numeric' }) + '</strong>';
+      b.innerHTML = '<small>' + fmtDate(d, { weekday: 'short' }) + '</small><strong>' + (isNarrow ? fmtDate(d, { day: 'numeric' }) : ordn(fmtDate(d, { day: 'numeric' }))) + '</strong>';
       b.setAttribute('aria-label', fmtDate(d, { weekday: 'long', month: 'long', day: 'numeric' }) + ', ' + openCount(d) + ' open');
       b.onclick = function () { state.dayIdx = i; render(); };
       strip.appendChild(b);
@@ -895,7 +924,7 @@ function boot() {
     });
     var times = document.createElement('div');
     times.className = 'times'; times.style.height = H + 'px';
-    for (var hr = 0; hr <= N / 2; hr++) { var s = document.createElement('span'); s.style.top = (hr * 2 * SL) + 'px'; s.textContent = fmtT(START + hr * 60, true); if (hr === 0) s.className = 'first'; else if (hr === N / 2) s.className = 'last'; times.appendChild(s); }
+    for (var hr = 0; hr <= N / 2; hr++) { var s = document.createElement('span'); s.style.top = (hr * 2 * SL) + 'px'; s.textContent = isNarrow ? fmtT(START + hr * 60, true) : fmtC(START + hr * 60); if (hr === 0) s.className = 'first'; else if (hr === N / 2) s.className = 'last'; times.appendChild(s); }
     grid.appendChild(times);
 
     shown.forEach(function (d) {
@@ -907,8 +936,8 @@ function boot() {
           var key = d + '|' + u, on = state.sel.has(key);
           var b = document.createElement('button');
           b.className = 'slot';
-          b.style.top = (u * SL + 1) + 'px'; b.style.height = (SL - 2) + 'px';
-          b.textContent = (on ? '✓ ' : '') + fmtT(uMin(u), false);
+          b.style.top = (u * SL) + 'px'; b.style.height = SL + 'px';
+          b.textContent = isNarrow ? fmtT(uMin(u), false) : fmtC(uMin(u));
           b.setAttribute('aria-pressed', String(on));
           b.setAttribute('aria-label', fmtDate(d, { weekday: 'short', month: 'short', day: 'numeric' }) + ', ' + fmtT(uMin(u), true) + ' to ' + fmtT(uMin(u) + 30, true) + ', open');
           b.dataset.key = key;
@@ -917,15 +946,15 @@ function boot() {
         } else if (st[u] === 'past') {
           var pc = document.createElement('div');
           pc.className = 'slot slot-past';
-          pc.style.top = (u * SL + 1) + 'px'; pc.style.height = (SL - 2) + 'px';
-          pc.textContent = fmtT(uMin(u), false);
+          pc.style.top = (u * SL) + 'px'; pc.style.height = SL + 'px';
+          pc.textContent = '';
           pc.setAttribute('aria-label', fmtT(uMin(u), true) + ', passed');
           col.appendChild(pc); u++;
         } else {
           var v = st[u], a = u; while (u < N && st[u] === v) u++;
           var blk = document.createElement('div');
           blk.className = 'blk ' + v;
-          blk.style.top = (a * SL + 1) + 'px'; blk.style.height = ((u - a) * SL - 2) + 'px';
+          blk.style.top = (a * SL + (v === 'pend' ? 2 : 0)) + 'px'; blk.style.height = ((u - a) * SL - (v === 'pend' ? 4 : 0)) + 'px';
           blk.textContent = LABEL[v];
           col.appendChild(blk);
         }
