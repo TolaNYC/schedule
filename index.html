@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#1f2419" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1f2419" media="(prefers-color-scheme: dark)">
 <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0}</style>
 <title>Artur's Schedule</title>
 <style>
@@ -642,6 +642,59 @@ html,body{background:var(--bg)}
 .toast::before{background:var(--text);color:var(--bg)}
 .field .req{color:var(--err)}
 :focus-visible{outline:2px solid var(--text);outline-offset:-2px}
+
+/* ================= Dark olive app ================= */
+:root:not(#_){
+  --bg:#1f2419; --surface:#1f2419; --surface-2:#262c1f; --surface-3:#30382a;
+  --text:#e9ecdf; --muted:#a8ad98; --faint:#7a8069; --line:#323a29; --line-strong:#424b37;
+  --accent:#e9ecdf; --accent-hover:#ffffff; --on-accent:#1f2419; --accent-soft:#30382a;
+  --brand:#e9ecdf; --brand-hover:#ffffff; --brand-text:#1f2419;
+  --free:#242a1d; --free-line:#3a4330; --free-text:#cdd3bc; --free-hover:#2c3324; --free-hover-line:#5c674b;
+  --busy:#252a1f; --busy-line:#5b3a36; --busy-text:#9ca18b; --hatch-a:#2b3124; --hatch-b:#21271b;
+  --buf:#252a1f; --buf-line:#4c563f; --buf-text:#9ca18b;
+  --pend:#2a2a33; --pend-line:#47445f; --pend-text:#c7c1f2;
+  --past-text:#6c7260;
+  --sel:#e9ecdf; --sel-text:#1f2419; --ok:#e9ecdf; --err:#f2948a; --err-bg:#35251f; --input-line:#424b37; --now:#e9ecdf;
+  --shadow-md:0 4px 12px rgba(0,0,0,.4); --shadow-lg:0 18px 48px rgba(0,0,0,.55);
+  color-scheme:dark;
+}
+html,body{background:var(--bg)}
+.sync{display:none!important}
+
+/* ---------- request dialog: centered, smooth ---------- */
+.panel[data-state="open"],.panel[data-state="closed"][data-was="open"]{
+  top:calc(var(--vvtop, 0px) + var(--vvh, 100dvh) / 2)!important;left:50%!important;right:auto!important;bottom:auto!important;
+  width:min(440px, calc(100vw - 32px))!important;max-height:calc(var(--vvh, 100dvh) - 32px)!important;
+  border-radius:16px!important;border:1px solid var(--line-strong)!important;box-shadow:var(--shadow-lg)!important;
+  padding:0!important;background:var(--surface-2);overflow:auto}
+.panel[data-state="open"]{transform:translate(-50%,-50%)!important;opacity:1;transition:none;animation:dlgIn .32s cubic-bezier(.2,.9,.25,1) both}
+.panel[data-state="closed"][data-was="open"]{transform:translate(-50%,-47%) scale(.97)!important;opacity:0;transition:transform .22s ease,opacity .2s ease}
+@keyframes dlgIn{from{opacity:0;transform:translate(-50%,-46%) scale(.96)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.panel[data-state="open"]::before{display:none!important}
+.panel[data-state="open"] .sheet-body{animation:none;max-width:none;padding:20px 20px 18px}
+.panel[data-state="open"] .sheet-min{display:inline-flex!important;align-items:center;justify-content:center;font-size:14px}
+.backdrop{transition:opacity .25s ease;background:rgba(10,12,8,.6);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.panel[data-state="closed"][data-was="peek"]{transform:translateY(-8px)!important;opacity:0}
+@media (prefers-reduced-motion: reduce){.panel[data-state="open"]{animation:none}.panel[data-state="closed"][data-was="open"]{transition:none}}
+
+/* ---------- toolbar on narrow screens ---------- */
+.nav{gap:6px 8px}
+.nav-left{gap:6px}
+.nav h2{white-space:nowrap}
+@media (max-width: 420px){
+  .nav{flex-wrap:wrap}
+  .nav-left{flex:1 1 auto;min-width:0;gap:4px}
+  .nav h2{font-size:15px;padding:0 2px;overflow:hidden;text-overflow:ellipsis}
+  .btn-icon{width:30px;height:30px;min-height:30px}
+  .seg button{padding:5px 10px;font-size:12px}
+  .cal-legend{gap:2px 10px;font-size:11px}
+}
+@media (max-width: 330px){
+  .nav h2{font-size:13px}
+  .btn-icon{width:28px;height:28px;min-height:28px}
+  .seg button{padding:4px 8px}
+  .cal-legend{gap:2px 8px;font-size:10.5px}
+}
 </style>
 
 </head>
@@ -693,7 +746,7 @@ html,body{background:var(--bg)}
         <span class="bar-cta">Continue</span>
       </button>
       <div class="sheet-body" id="sheet-body">
-        <div class="panel-head"><h2>Your request</h2><span class="total-pill" id="total-pill" hidden></span><button type="button" class="sheet-min" id="sheet-min" aria-label="Minimize">⌄</button></div>
+        <div class="panel-head"><h2>Your request</h2><span class="total-pill" id="total-pill" hidden></span><button type="button" class="sheet-min" id="sheet-min" aria-label="Close">✕</button></div>
         <div class="empty" id="empty" hidden></div>
         <form id="reqform" hidden novalidate>
           <ul class="chips" id="chips" aria-label="Selected times"></ul>
@@ -805,8 +858,10 @@ function boot() {
     document.getElementById('next').setAttribute('aria-label', dayView ? 'Next day' : 'Next week');
 
     document.getElementById('week-label').textContent = dayView
-      ? fmtDate(week[state.dayIdx], { weekday: 'long', month: 'short', day: 'numeric' })
-      : fmtDate(week[0], { month: 'short', day: 'numeric' }) + ' – ' + fmtDate(week[week.length - 1], { month: 'short', day: 'numeric' });
+      ? fmtDate(week[state.dayIdx], window.innerWidth < 360 ? { weekday: 'short', month: 'short', day: 'numeric' } : { weekday: 'long', month: 'short', day: 'numeric' })
+      : (window.innerWidth < 360 && fmtDate(week[0], { month: 'short' }) === fmtDate(week[week.length - 1], { month: 'short' })
+          ? fmtDate(week[0], { month: 'short', day: 'numeric' }) + '–' + fmtDate(week[week.length - 1], { day: 'numeric' })
+          : fmtDate(week[0], { month: 'short', day: 'numeric' }) + ' – ' + fmtDate(week[week.length - 1], { month: 'short', day: 'numeric' }));
     document.getElementById('prev').disabled = dayView ? gIdx === 0 : state.week === 0;
     document.getElementById('next').disabled = dayView ? gIdx >= DAYS.length - 1 : state.week >= WEEKS - 1;
 
@@ -977,6 +1032,7 @@ function boot() {
     if (!has && !sent) state.sheetOpen = false;
     var sheetState = sent ? 'open' : has ? (state.sheetOpen ? 'open' : 'peek') : 'closed';
     var panelEl = document.getElementById('panel'), prevState = panelEl.dataset.state;
+    if (prevState && prevState !== sheetState) panelEl.dataset.was = prevState;
     panelEl.dataset.state = sheetState;
     var reserve = ''; dockBar();
     if (reserve === 'bottom') document.documentElement.style.setProperty('--peek-h', (panelEl.offsetHeight || 76) + 'px');
@@ -1076,7 +1132,7 @@ function boot() {
     var root = document.documentElement;
     var fit = function () {
       var kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      root.style.setProperty('--kb', kb + 'px'); root.style.setProperty('--vvh', vv.height + 'px');
+      root.style.setProperty('--kb', kb + 'px'); root.style.setProperty('--vvh', vv.height + 'px'); root.style.setProperty('--vvtop', vv.offsetTop + 'px');
     };
     vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); fit();
     ['f-name', 'f-note'].forEach(function (id) {
