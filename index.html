@@ -853,7 +853,12 @@ function boot() {
   var rz = null; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { FIT = 0; if (!(typeof ADMIN !== 'undefined' && ADMIN.on)) render(); }, 120); });
 
   // Only events longer than 3 hours get the 30-minute buffer before and after.
-  function longOnly(spans) { return (spans || []).filter(function (sp) { return hm(sp[1]) - hm(sp[0]) > 180; }); }
+  function longOnly(spans) {
+    var s = (spans || []).map(function (sp) { return [hm(sp[0]), hm(sp[1])]; }).sort(function (a, b) { return a[0] - b[0]; }), m = [];
+    s.forEach(function (x) { var l = m[m.length - 1]; if (l && x[0] <= l[1]) l[1] = Math.max(l[1], x[1]); else m.push([x[0], x[1]]); });
+    var t = function (v) { return String(Math.floor(v / 60)).padStart(2, '0') + ':' + String(v % 60).padStart(2, '0'); };
+    return m.filter(function (x) { return x[1] - x[0] > 180; }).map(function (x) { return [t(x[0]), t(x[1])]; });
+  }
 
   // Status of every half hour in a day: free, busy, buf, pend or past.
   function dayStatus(date, now) {
